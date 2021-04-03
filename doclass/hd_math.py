@@ -8,6 +8,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import re
+import os
 
 
 
@@ -26,9 +27,10 @@ class HdMath:
        #self.option.add_argument('--headless')    #去掉以下三个#即为无头模式，不显示浏览器窗口
        #self.option.add_argument('--disable-gpu')
        #self.option.add_argument('--no-sandbox') 
-       try:
+       try :
            self.driver=webdriver.Chrome(options=self.option)
-       except:
+           #self.driver.implicitly_wait(10)  #隐式等待
+       except :
            self.driver.quit()
            raise     
 
@@ -65,25 +67,38 @@ class HdMath:
             
 
 
-    def getTestId(self):    
-        print("-----登陆成功，开始获取章节数\n")
-        WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
-        self.driver.find_element_by_class_name("odd").click()
-        WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
-        courseList=self.driver.find_elements_by_class_name("noBorder.name")   #在selenium中 标签属性值中有空格则用.代替
+    def getTestId(self):
+        try:    
+            os.system("cls")
+            WebDriverWait(self.driver,timeout=10).until(EC.presence_of_element_located((By.TAG_NAME,"tbody")),message="")
 
-        chapterNumber:int=1
-        for course in courseList:
-            try:   #获取已解锁章节的id以及显示章节名称
-                chapterHref=course.find_element_by_xpath("a").get_attribute("href")
-                chapterName=course.find_element_by_xpath("a").text
-                print(str(chapterNumber)+"  "+str(chapterName))
-                pattern="testId=(\w)*"
-                testIdNumber=re.search(pattern,chapterHref).group(0)
-                self.__charpterId.put(testIdNumber)
-                chapterNumber=chapterNumber+1
-            except:
-                continue
+            time.sleep(1)
+            clazzsList:list=[]
+            clazzs=self.driver.find_element_by_tag_name("tbody").find_elements_by_tag_name("td") #遍历课程名称,选则需要的班级
+            clazzsNumber:int=1
+            for clazz in clazzs:
+                clazzsList.append(clazz)
+                print(str(clazzsNumber)+"  "+clazz.text)
+                clazzsNumber=clazzsNumber+1
+            chooseClazz:int=input("-----请选择需要刷取的课程班级\n")
+            clazzsList[int(chooseClazz)-1].click()
+
+            WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
+            courseList=self.driver.find_elements_by_class_name("noBorder.name")   #在selenium中 标签属性值中有空格则用.代替
+            chapterNumber:int=1
+            for course in courseList:
+                try:   #获取已解锁章节的id以及显示章节名称
+                    chapterHref=course.find_element_by_xpath("a").get_attribute("href")
+                    chapterName=course.find_element_by_xpath("a").text
+                    print(str(chapterNumber)+"  "+str(chapterName))
+                    pattern="testId=(\w)*"
+                    testIdNumber=re.search(pattern,chapterHref).group(0)
+                    self.__charpterId.put(testIdNumber)
+                    chapterNumber=chapterNumber+1
+                except:
+                    continue
+        except Exception as e:
+            print(e)            
 
 
 
@@ -137,14 +152,12 @@ class HdMath:
                 time.sleep(1)    
                 self.driver.find_element_by_id("MenuItem.actions.assignment.back").click()
                 WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)   # 先跳转到提交页面再回到第一题，确保接下来的答案页面生成正确的答案
-
                 answerUrl="window.open(\"http://125.223.1.242:80/mapleta/modules/gradeProctoredTest.Login?currPage=1&"+testId+"&actionID=viewdetails\");"
                 self.driver.execute_script(answerUrl)
                 WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
 
                 handleArray=self.driver.window_handles
                 self.driver.switch_to_window(handleArray[1]) # 切换至答案窗口
-                
 
                 # 获取answer
                 print("-----开始获取答案")
@@ -220,6 +233,7 @@ class HdMath:
                     time.sleep(int(self.__timeoutCountrol))
                 print("-----填写结束")                     
             except Exception as e:
+                print(e)
                 raise
        
 
