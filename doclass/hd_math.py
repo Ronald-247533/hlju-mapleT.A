@@ -22,13 +22,13 @@ class HdMath:
     __timeoutCountrol:int=1
 
     def __init__(self):
-       self.option=webdriver.ChromeOptions() 
+       self.option=webdriver.EdgeOptions()
        self.option.add_argument('--ignore-certificate-errors')
        #self.option.add_argument('--headless')    #去掉以下三个#即为无头模式，不显示浏览器窗口
        #self.option.add_argument('--disable-gpu')
        #self.option.add_argument('--no-sandbox') 
        try :
-           self.driver=webdriver.Chrome(options=self.option)
+           self.driver=webdriver.Edge(options=self.option)
            #self.driver.implicitly_wait(10)  #隐式等待
        except :
            self.driver.quit()
@@ -36,13 +36,16 @@ class HdMath:
 
     def loginHD(self):
         try:
-            self.__userid=input("-----请输入学号,输入0退出：\n")
-            if self.__userid=="0":
-               self.driverQuit()
-               return 0
-            else:
-               self.__password=input("-----请输入密码: \n")
-               self.__timeoutCountrol=input("-----请输入超时等待，默认为1(即1s).  若出现上机人数过多导致脚本运行不正常，请尝试将此项调节为5或更高: \n")
+            #self.__userid=input("-----请输入学号,输入0退出：\n")
+            #if self.__userid=="0":
+            #   self.driverQuit()
+            #   return 0
+            #else:
+            #   self.__password=input("-----请输入密码: \n")
+            self.__userid='20214335'
+            self.__password='yjx59451314'
+            self.__timeoutCountrol=1
+            #self.__timeoutCountrol=input("-----请输入超时等待，默认为1(即1s).  若出现上机人数过多导致脚本运行不正常，请尝试将此项调节为5或更高: \n")
 
             self.driver.get("http://125.223.1.242/mapleta/login/login.do")
             WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
@@ -59,7 +62,7 @@ class HdMath:
                 time.sleep(1)
                 self.driver.switch_to.alert.accept()  # 若弹出警告弹窗，则进行确认
             except:   
-                return
+                return 1
             return 1        
         except Exception:
             raise Exception("-----登录失败，请检查学号和密码")
@@ -71,7 +74,6 @@ class HdMath:
         try:    
             os.system("cls")
             WebDriverWait(self.driver,timeout=10).until(EC.presence_of_element_located((By.TAG_NAME,"tbody")),message="")
-
             time.sleep(1)
             clazzsList:list=[]
             clazzs=self.driver.find_element_by_tag_name("tbody").find_elements_by_tag_name("td") #遍历课程名称,选则需要的班级
@@ -82,7 +84,7 @@ class HdMath:
                 clazzsNumber=clazzsNumber+1
             chooseClazz:int=input("-----请选择需要刷取的课程班级\n")
             clazzsList[int(chooseClazz)-1].click()
-
+            time.sleep(1)
             WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
             courseList=self.driver.find_elements_by_class_name("noBorder.name")   #在selenium中 标签属性值中有空格则用.代替
             chapterNumber:int=1
@@ -157,7 +159,7 @@ class HdMath:
                 WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
 
                 handleArray=self.driver.window_handles
-                self.driver.switch_to_window(handleArray[1]) # 切换至答案窗口
+                self.driver.switch_to.window(handleArray[1]) # 切换至答案窗口
 
                 # 获取answer
                 print("-----开始获取答案")
@@ -169,7 +171,7 @@ class HdMath:
                     fanswerList=question.find_elements_by_class_name("part-answer")
                     if(len(fanswerList)==0):    
                         # 部分答案不在p标签中
-                        time.sleep(int(self.__timeoutCountrol))
+                        time.sleep(1)
                         try:
                             canswer=question.find_element_by_xpath("//*[@id=\"pageContainer\"]/form/div/div[2]/div["+str(questionControl)+"]/table[2]/tbody/tr[2]/td[2]/p").text
                             canswer=repr(str(canswer).replace('\n',"").replace(' ',""))
@@ -192,7 +194,7 @@ class HdMath:
 
                 # 开始填写answer
                 print("-----开始填写answer")
-                self.driver.switch_to_window(handleArray[0])
+                self.driver.switch_to.window(handleArray[0])
                 time.sleep(1)
                 answerNumber=1
                 while 1:
@@ -230,7 +232,7 @@ class HdMath:
                         break    
                     self.driver.find_element_by_id("MenuItem.actions.assignment.next").click()
                     WebDriverWait(self.driver,timeout=10).until(EC.presence_of_all_elements_located)
-                    time.sleep(int(self.__timeoutCountrol))
+                    time.sleep(1)
                 print("-----填写结束")                     
             except Exception as e:
                 print(e)
